@@ -69,20 +69,20 @@ def main():
                                 # resize 없이 하려면 이거 상수로 두면 안됨
             features = get_feature(model, x, device, outputs) # return [layer2_feature]
             m = torch.nn.AvgPool2d(kernel_size=3, stride=1, padding=1)
-            gallery2 = rearrange(m(features[0]), 'i c h w ->i (h w) c').to('cpu').detach().numpy().copy()
+            gallery2 = rearrange(m(features[0]), 'i c h w ->i (h w) c').unsqueeze(1).to('cpu').detach().numpy().copy()
             # einops.rearrange :  i c h w의 차원을 i (h w) c로 변경, (h w)는 곱해짐 (40*40 → 1600)
-            # 이후에 1번 자리에 1차원 추가 (i, 1, 1600, c).unsqueeze(1)
+            # 이후에 1번 자리에 1차원 추가 (i, 1, 1600, c)
             # heatMap2 = calc_score(gallery2, gallery2, 0) # 각 픽셀에서 가까운 400개와의 평균거리 히트맵
             heatMap2 = calc_dbscan(gallery2, 0)
 
             for imgID in range(x.shape[0]):
                 cut2 = 3
-                newHeat = interpolate_scoremap(imgID, heatMap2, cut2, x.shape[1]) # 상하좌우 3씩 깎고 다시 보간
+                newHeat = interpolate_scoremap(imgID, heatMap2, cut2, x.shape[2]) # 상하좌우 3씩 깎고 다시 보간
                 # newHeat = gaussian_filter(newHeat.squeeze().cpu().detach().numpy(), sigma=4)
                 newHeat = torch.from_numpy(newHeat.astype(np.float32)).clone().unsqueeze(0).unsqueeze(0)
 
-                score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[1]-cut_surrounding,
-                                      cut_surrounding:x.shape[1] - cut_surrounding])
+                score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[2]-cut_surrounding,
+                                      cut_surrounding:x.shape[2] - cut_surrounding])
                 scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
 
         ##################################################
@@ -143,19 +143,49 @@ def get_feature(model, img, device, outputs):
 
 def calc_dbscan(gallery, layerID):
     # gallery = (i, 1, 1600, c)
-    heatmap = np.zeros((gallery.shape[0], gallery.shape[1])) # i, 1600
-    dbscan = DBSCAN(eps=0.2, min_samples=400) # DBSCAN (eps : epsilon, min_samples : min point)
-    labels = dbscan.fit(gallery[ :, :, :])
-    ranked_cluster = rank_labels(labels)
-    for idx, i in enumerate(labels) :
-        if i == ranked_cluster[0]:
-            labels[idx] = 0
-        else :
-            labels[idx] = 1
-        heatmap[idx, :] = labels[idx]
-        heatmap = torch.from_numpy(heatmap.astype(np.float32)).clone()
-    dim = int(np.sqrt(gallery.shape[1]))
-    return heatmap.reshape(gallery.shape[0], dim, -1)
+    heatmap = np.zeros((gallery.shape[0], gallery.shape[2]))  # (i, 1600)
+
+    for img_idx in range(gallery.shape[0]):
+        # 각 이미지의 갤러리에서 특정 레이어ID의 데이터를 선택합니다.
+        features = gallery[img_idx, layerID, :, :]  # (1600, c)
+
+        # DBSCAN 클러스터링을 수행합니다.
+        dbscan = DBSCAN(eps=0.2, min_samples=400)  # eps와 min_samples는 데이터에 맞게 조정하세요.
+        labels = dbscan.fit_predict(features)  # (1600,)
+
+        # 라벨을 빈도수에 따라 정렬합니다.
+        ranked_cluster = rank_labels(labels)
+
+        # 라벨을 사용하여 히트맵을 생성합니다.
+        for idx in range(len(labels)):
+            if labels[idx] == ranked_cluster[0]:
+                heatmap[img_idx, idx] = 0
+            else:
+                heatmap[img_idx, idx] = 1
+
+    # 히트맵을 torch 텐서로 변환합니다.
+    heatmap = torch.from_numpy(heatmap.astype(np.float32)).clone()
+
+    # 히트맵을 원래 이미지의 2D 형식으로 변환합니다.
+    dim = int(np.sqrt(gallery.shape[2]))  # 예를 들어, 1600이면 40x40이 됩니다.
+    return heatmap.reshape(gallery.shape[0], dim, dim)  # (i, h, w)
+
+
+# def calc_dbscan(gallery, layerID):
+#     # gallery = (i, 1, 1600, c)
+#     heatmap = np.zeros((gallery.shape[0], gallery.shape[2])) # i, 1600
+#     dbscan = DBSCAN(eps=0.2, min_samples=400) # DBSCAN (eps : epsilon, min_samples : min point)
+#     labels = dbscan.fit(gallery[ :, layerID, :, :])
+#     ranked_cluster = rank_labels(labels)
+#     for idx, i in enumerate(labels) :
+#         if i == ranked_cluster[0]:
+#             labels[idx] = 0
+#         else :
+#             labels[idx] = 1
+#         heatmap[idx, :] = labels[idx]
+#         heatmap = torch.from_numpy(heatmap.astype(np.float32)).clone()
+#     dim = int(np.sqrt(gallery.shape[2]))
+#     return heatmap.reshape(gallery.shape[0], dim, -1)
 
 def calc_score(test, gallery, layerID):
     # test = gallery = (i, 1, 1600, c)
