@@ -145,7 +145,7 @@ def calc_dbscan(gallery, layerID):
     # gallery = (i, 1, 1600, c)
     heatmap = np.zeros((gallery.shape[0], gallery.shape[1])) # i, 1600
     dbscan = DBSCAN(eps=0.2, min_samples=400) # DBSCAN (eps : epsilon, min_samples : min point)
-    labels = dbscan.fit(gallery[ :, layerID, :, :])
+    labels = dbscan.fit(gallery[ :, :, :])
     ranked_cluster = rank_labels(labels)
     for idx, i in enumerate(labels) :
         if i == ranked_cluster[0]:
