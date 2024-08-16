@@ -50,37 +50,47 @@ def main():
         test_dataset = mvtec.MVTecDataset(class_name=class_name, is_train=False)
         test_dataloader = DataLoader(test_dataset, batch_size=1, pin_memory=True)
 
-        gt_list = []
+        lable_list = []
         gt_mask_list = []
         test_imgs = []
         score_map_list = []
         scores = []
         cut_surrounding = 32
 
+        # 이미지 단위
         for (x, y, mask) in tqdm(test_dataloader, '| feature extraction | test |'):
             test_imgs.extend(x.cpu().detach().numpy())
-            gt_list.extend(y.cpu().detach().numpy())
+            lable_list.extend(y.cpu().detach().numpy())
             gt_mask_list.extend(mask[:, :, cut_surrounding:x.shape[2] - cut_surrounding,
                                 cut_surrounding:x.shape[2] - cut_surrounding].cpu().detach().numpy().astype(int))
-            features = get_feature(model, x, device, outputs)
-            m = torch.nn.AvgPool2d(3, 1, 1)
-            gallery2 = rearrange(m(features[0]), 'i c h w ->i  (h w) c').unsqueeze(1).to('cpu').detach().numpy().copy()
-            heatMap2 = calc_score(gallery2, gallery2, 0)
+                                # 상하좌우 32픽셀씩 자름. (PatchCore는 256인데 UTAD는 320인 이유)
+                                # resize 없이 하려면 이거 상수로 두면 안됨
+            features = get_feature(model, x, device, outputs) # return [layer2_feature]
+            m = torch.nn.AvgPool2d(kernel_size=3, stride=1, padding=1)
+            gallery2 = rearrange(m(features[0]), 'i c h w ->i (h w) c').unsqueeze(1).to('cpu').detach().numpy().copy()
+            # einops.rearrange :  i c h w의 차원을 i (h w) c로 변경, (h w)는 곱해짐 (40*40 → 1600)
+            # 이후에 1번 자리에 1차원 추가 (i, 1, 1600, c)
+            heatMap2 = calc_score(gallery2, gallery2, 0) # 각 픽셀에서 가까운 400개와의 평균거리 히트맵
 
             for imgID in range(x.shape[0]):
                 cut2 = 3
-                newHeat = interpolate_scoremap(imgID, heatMap2, cut2, x.shape[2])
+                newHeat = interpolate_scoremap(imgID, heatMap2, cut2, x.shape[2]) # 상하좌우 3씩 깎고 다시 보간
                 newHeat = gaussian_filter(newHeat.squeeze().cpu().detach().numpy(), sigma=4)
                 newHeat = torch.from_numpy(newHeat.astype(np.float32)).clone().unsqueeze(0).unsqueeze(0)
 
                 score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[2]-cut_surrounding,
                                       cut_surrounding:x.shape[2] - cut_surrounding])
-                scores.append(score_map_list[-1].max().item())
+                scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
 
         ##################################################
         # calculate image-level ROC AUC score
-        fpr, tpr, _ = roc_curve(gt_list, scores)
-        roc_auc = roc_auc_score(gt_list, scores)
+        # 클래스 단위
+        fpr, tpr, _ = roc_curve(lable_list, scores) # return FPRs, TPRs, Thresholds
+        roc_auc = roc_auc_score(lable_list, scores) # return roc_score
+        log_txt = open('result/img_log.txt', 'w')
+        log_txt.write(f"{roc_auc}\n")
+        class_txt = open('result/class_name.txt', 'w')
+        class_txt.write(f"{class_name}\n")
         total_roc_auc.append(roc_auc)
         print('%s ROCAUC: %.3f' % (class_name, roc_auc))
         fig_img_rocauc.plot(fpr, tpr, label='%s ROCAUC: %.3f' % (class_name, roc_auc))
@@ -110,10 +120,11 @@ def main():
         fig.savefig(os.path.join(args.save_path, 'roc_curve.png'), dpi=100)
 
 
-def interpolate_scoremap(imgID, heatMap, cut,imgshape):
+def interpolate_scoremap(imgID, heatMap, cut, imgshape):
     blank = torch.ones_like(heatMap[imgID, :, :]) * heatMap[imgID, :, :].min()
     blank[cut:heatMap.shape[1] - cut, cut:heatMap.shape[1] - cut] = heatMap[imgID, cut:heatMap.shape[1] - cut,
                                                                     cut:heatMap.shape[1] - cut]
+    # 상하좌우 3씩 또 깎음
     return F.interpolate(blank[:, :].unsqueeze(0).unsqueeze(0), size=imgshape, mode='bilinear', align_corners=False)
 
 
@@ -128,11 +139,13 @@ def get_feature(model, img, device, outputs):
 
 
 def calc_score(test, gallery, layerID):
-
-    heatmap = np.zeros((test.shape[0], test.shape[2]))
+    # test = gallery = (i, 1, 1600, c)
+    heatmap = np.zeros((test.shape[0], test.shape[2])) # i, 1600
     for imgID in range(test.shape[0]):
         nbrs = NearestNeighbors(n_neighbors=400, algorithm='ball_tree').fit(gallery[imgID, layerID, :, :])
+        # 1600개 모든 특징 등록
         distances, _ = nbrs.kneighbors(test[imgID, layerID, :, :])
+        # 해당 imgID 특징의 knn거리 distances에 저장
         heatmap[imgID, :] = np.mean(distances, axis=1)
         heatmap = torch.from_numpy(heatmap.astype(np.float32)).clone()
     dim = int(np.sqrt(test.shape[2]))
