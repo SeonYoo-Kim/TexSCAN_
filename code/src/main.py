@@ -81,6 +81,7 @@ def main():
                 # newHeat = gaussian_filter(newHeat.squeeze().cpu().detach().numpy(), sigma=4)
                 #newHeat = torch.from_numpy(newHeat.astype(np.float32)).clone().unsqueeze(0).unsqueeze(0)
                 newHeat = torch.tensor(newHeat, dtype=torch.float32).clone().unsqueeze(0).unsqueeze(0)
+                print(f"newHeat shape: {newHeat.shape}")
                 score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[2]-cut_surrounding,
                                       cut_surrounding:x.shape[2] - cut_surrounding])
                 scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
