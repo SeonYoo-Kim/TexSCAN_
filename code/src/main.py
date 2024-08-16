@@ -5,6 +5,8 @@ from tqdm import tqdm
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import roc_curve
 from sklearn.metrics import precision_recall_curve
+from sklearn.cluster import DBSCAN
+from collections import Counter
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import torch
@@ -70,12 +72,13 @@ def main():
             gallery2 = rearrange(m(features[0]), 'i c h w ->i (h w) c').unsqueeze(1).to('cpu').detach().numpy().copy()
             # einops.rearrange :  i c h w의 차원을 i (h w) c로 변경, (h w)는 곱해짐 (40*40 → 1600)
             # 이후에 1번 자리에 1차원 추가 (i, 1, 1600, c)
-            heatMap2 = calc_score(gallery2, gallery2, 0) # 각 픽셀에서 가까운 400개와의 평균거리 히트맵
+            # heatMap2 = calc_score(gallery2, gallery2, 0) # 각 픽셀에서 가까운 400개와의 평균거리 히트맵
+            heatMap2 = calc_dbscan(gallery2, 0)
 
             for imgID in range(x.shape[0]):
                 cut2 = 3
                 newHeat = interpolate_scoremap(imgID, heatMap2, cut2, x.shape[2]) # 상하좌우 3씩 깎고 다시 보간
-                newHeat = gaussian_filter(newHeat.squeeze().cpu().detach().numpy(), sigma=4)
+                # newHeat = gaussian_filter(newHeat.squeeze().cpu().detach().numpy(), sigma=4)
                 newHeat = torch.from_numpy(newHeat.astype(np.float32)).clone().unsqueeze(0).unsqueeze(0)
 
                 score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[2]-cut_surrounding,
@@ -138,6 +141,21 @@ def get_feature(model, img, device, outputs):
     outputs.clear()
     return [layer2_feature]
 
+def calc_dbscan(gallery, layerID):
+    # gallery = (i, 1, 1600, c)
+    heatmap = np.zeros((gallery.shape[0], gallery.shape[2])) # i, 1600
+    dbscan = DBSCAN(eps=0.2, min_samples=400) # DBSCAN (eps : epsilon, min_samples : min point)
+    labels = dbscan.fit(gallery[ :, layerID, :, :])
+    ranked_cluster = rank_labels(labels)
+    for idx, i in enumerate(labels) :
+        if i == ranked_cluster[0]:
+            labels[idx] = 0
+        else :
+            labels[idx] = 1
+        heatmap[idx, :] = labels[idx]
+        heatmap = torch.from_numpy(heatmap.astype(np.float32)).clone()
+    dim = int(np.sqrt(gallery.shape[2]))
+    return heatmap.reshape(gallery.shape[0], dim, -1)
 
 def calc_score(test, gallery, layerID):
     # test = gallery = (i, 1, 1600, c)
@@ -152,6 +170,14 @@ def calc_score(test, gallery, layerID):
     dim = int(np.sqrt(test.shape[2]))
     return heatmap.reshape(test.shape[0], dim, -1)
 
+
+def rank_labels(labels):
+    # 라벨의 빈도를 계산합니다.
+    label_counts = Counter(labels)
+    # 빈도순으로 라벨을 정렬합니다.
+    sorted_labels = sorted(label_counts.items(), key=lambda item: item[1], reverse=True)
+    # 결과를 리스트로 반환합니다.
+    return [label for label, count in sorted_labels]
 
 def visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, save_path, class_name, vis_num, cut_pixel):
     for t_idx in range(vis_num):
