@@ -115,8 +115,7 @@ def main():
         threshold = thresholds[np.argmax(f1)]
 
         # visualize localization result
-        visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, args.save_path, class_name, 5,
-                             cut_surrounding)
+        visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, args.save_path, class_name, 5, cut_surrounding)
 
         fig.tight_layout()
         fig.savefig(os.path.join(args.save_path, 'roc_curve.png'), dpi=100)
@@ -154,8 +153,7 @@ def calc_score(test, gallery, layerID):
     return heatmap.reshape(test.shape[0], dim, -1)
 
 
-def visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold,
-                         save_path, class_name, vis_num,cut_pixel):
+def visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, save_path, class_name, vis_num, cut_pixel):
     for t_idx in range(vis_num):
         test_img = test_imgs[t_idx]
         test_img = denormalization(test_img)
