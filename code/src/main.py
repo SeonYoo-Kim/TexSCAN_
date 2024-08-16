@@ -164,7 +164,7 @@ def calc_dbscan(gallery, layerID):
                 heatmap[img_idx, idx] = 1
 
     # 히트맵을 torch 텐서로 변환합니다.
-    heatmap = torch.from_numpy(heatmap.astype(np.float32)).clone()
+    heatmap = torch.tensor(heatmap, dtype=torch.float32).clone()
 
     # 히트맵을 원래 이미지의 2D 형식으로 변환합니다.
     dim = int(np.sqrt(gallery.shape[2]))  # 예를 들어, 1600이면 40x40이 됩니다.
