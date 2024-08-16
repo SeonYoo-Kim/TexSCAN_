@@ -80,7 +80,7 @@ def main():
                 newHeat = interpolate_scoremap(imgID, heatMap2, cut2, x.shape[2]) # 상하좌우 3씩 깎고 다시 보간
                 # newHeat = gaussian_filter(newHeat.squeeze().cpu().detach().numpy(), sigma=4)
                 #newHeat = torch.from_numpy(newHeat.astype(np.float32)).clone().unsqueeze(0).unsqueeze(0)
-                newHeat = torch.tensor(newHeat, dtype=torch.float32).clone().unsqueeze(0).unsqueeze(0)
+                newHeat = torch.tensor(newHeat, dtype=torch.float32).clone()
                 print(f"newHeat shape: {newHeat.shape}")
                 score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[2]-cut_surrounding,
                                       cut_surrounding:x.shape[2] - cut_surrounding])
