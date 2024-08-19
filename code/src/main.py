@@ -130,7 +130,7 @@ def interpolate_scoremap(imgID, heatMap, cut, imgshape):
     blank[cut:heatMap.shape[1] - cut, cut:heatMap.shape[1] - cut] = heatMap[imgID, cut:heatMap.shape[1] - cut,
                                                                     cut:heatMap.shape[1] - cut]
     # 상하좌우 3씩 또 깎음
-    return F.interpolate(blank[:, :].unsqueeze(0).unsqueeze(0), size=imgshape, mode='bilinear', align_corners=False)
+    return F.interpolate(blank[:, :].unsqueeze(0).unsqueeze(0), size=imgshape, mode='nearest', align_corners=False)
 
 
 def get_feature(model, img, device, outputs):
