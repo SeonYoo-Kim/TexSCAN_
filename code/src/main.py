@@ -171,7 +171,7 @@ def calc_dbscan(gallery, layerID):
     heatmap = np.zeros((gallery.shape[0], gallery.shape[2]))  # (i, 1600)
     scaler = StandardScaler()
     label_amount = []
-    dbscan = DBSCAN(eps=100, min_samples=400)  # eps와 min_samples는 데이터에 맞게 조정하세요.
+    dbscan = DBSCAN(eps=100, min_samples=200)  # eps와 min_samples는 데이터에 맞게 조정하세요.
     for img_idx in range(gallery.shape[0]):
         # 각 이미지의 갤러리에서 특정 레이어ID의 데이터를 선택합니다.
         features = gallery[img_idx, layerID, :, :]  # (1600, c)
