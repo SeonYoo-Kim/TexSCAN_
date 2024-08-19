@@ -177,7 +177,7 @@ def calc_dbscan(gallery, layerID):
         data_scaled = scaler.fit_transform(features)
 
         # DBSCAN 클러스터링을 수행합니다.
-        dbscan = DBSCAN(eps=0.001, min_samples=50)  # eps와 min_samples는 데이터에 맞게 조정하세요.
+        dbscan = DBSCAN(eps=0.1, min_samples=400)  # eps와 min_samples는 데이터에 맞게 조정하세요.
         labels = dbscan.fit_predict(data_scaled)  # (1600,)
         print(labels)
         # 라벨을 빈도수에 따라 정렬합니다.
