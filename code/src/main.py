@@ -82,7 +82,7 @@ def main():
             # 이후에 1번 자리에 1차원 추가 (i, 1, 1600, c)
             # heatMap2 = calc_score(gallery2, gallery2, 0) # 각 픽셀에서 가까운 400개와의 평균거리 히트맵
             heatMap2 = calc_dbscan(gallery2, 0, e, m)
-            label_amount.append(heatMap2.len(label_amount))
+            label_amount.append(heatMap2.label_amount)
 
             for imgID in range(x.shape[0]):
                 cut2 = 3
