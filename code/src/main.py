@@ -24,6 +24,9 @@ def parse_args():
     parser.add_argument("--save_path", type=str, default="./result")
     parser.add_argument("--e", type=int, default=50)
     parser.add_argument("--m", type=int, default=200)
+    parser.add_argument("--param_path", type=str, default="./result/param.txt")
+    parser.add_argument("--img_path", type=str, default="./result/img_log.txt")
+    parser.add_argument("--pix_path", type=str, default="./result/pix_log.txt")
     #parser.add_argument('--dataset_category', '-d', choices=['MVTec', 'BTAD', 'WFDD', 'WFT'], default='MVTec')
     return parser.parse_args()
 
@@ -100,7 +103,7 @@ def main():
         # 클래스 단위
         fpr, tpr, _ = roc_curve(lable_list, scores) # return FPRs, TPRs, Thresholds
         roc_auc = roc_auc_score(lable_list, scores) # return roc_score
-        img_log_txt = open('result/img_log.txt', 'a')
+        img_log_txt = open(args.img_path, 'a')
         img_log_txt.write(f"{roc_auc}\n")
         class_txt = open('result/class_name.txt', 'w')
         class_txt.write(f"{class_name}\n")
@@ -114,13 +117,13 @@ def main():
 
         fpr, tpr, _ = roc_curve(flatten_gt_mask_list, flatten_score_map_list)
         per_pixel_rocauc = roc_auc_score(flatten_gt_mask_list, flatten_score_map_list)
-        pix_log_txt = open('result/pix_log.txt', 'a')
+        pix_log_txt = open(args.pix_path, 'a')
         pix_log_txt.write(f"{per_pixel_rocauc}\n")
         total_pixel_roc_auc.append(per_pixel_rocauc)
         print('%s pixel ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
         fig_pixel_rocauc.plot(fpr, tpr, label='%s ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
 
-        param_txt = open('result/param.txt', 'a')
+        param_txt = open(args.param_path, 'a')
         param_txt.write("eps : " + str(args.e) + "\tmin_samples : " + str(args.m)+"\timg_roc_auc :"+f"{roc_auc}"+"\tpix_roc_auc :"+f"{per_pixel_rocauc}")
         param_txt.write("\n" + class_name + " - num(label) : " + ' '.join(map(str, label_amount)) + "\n")
         param_txt.close()
