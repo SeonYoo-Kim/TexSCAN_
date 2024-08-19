@@ -148,7 +148,7 @@ def main():
 #     blank[cut:heatMap.shape[1] - cut, cut:heatMap.shape[1] - cut] = heatMap[imgID, cut:heatMap.shape[1] - cut,
 #                                                                     cut:heatMap.shape[1] - cut]
 #     # 상하좌우 3씩 또 깎음
-#     # return F.interpolate(blank[:, :].unsqueeze(0).unsqueeze(0), size=imgshape, mode='bininear', align_corners=False)
+#     # return F.interpolate(blank[:, :].unsqueeze(0).unsqueeze(0), size=imgshape, mode='bilinear', align_corners=False)
 #     return F.interpolate(blank[:, :].unsqueeze(0).unsqueeze(0), size=imgshape, mode='nearest')
 
 def interpolate_scoremap(imgID, heatMap, cut, imgshape):
@@ -159,15 +159,8 @@ def interpolate_scoremap(imgID, heatMap, cut, imgshape):
     blank[cut:heatMap.shape[1] - cut, cut:heatMap.shape[1] - cut] = heatMap[imgID, cut:heatMap.shape[1] - cut,
                                                                     cut:heatMap.shape[1] - cut]
 
-    # 보간 전의 blank 값을 출력
-    #print(f"Original blank (before interpolation):\n{blank}")
-
     # 'nearest' 보간으로 크기 조정
-    interpolated_blank = F.interpolate(blank[:, :].unsqueeze(0).unsqueeze(0), size=imgshape, mode='bininear', align_corners=False)
-
-    # 보간 후의 값을 출력
-
-    #print(f"Interpolated blank (after interpolation):\n{interpolated_blank.squeeze().cpu().numpy()}")
+    interpolated_blank = F.interpolate(blank[:, :].unsqueeze(0).unsqueeze(0), size=imgshape, mode='bilinear', align_corners=False)
 
     return interpolated_blank
 
