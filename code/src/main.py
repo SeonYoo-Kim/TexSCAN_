@@ -28,6 +28,7 @@ def main():
     args = parse_args()
     print('pwd=', os.getcwd())
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    np.set_printoptions(threshold=np.inf)
 
     # load model
     model = wide_resnet50_2(pretrained=True, progress=True)
@@ -143,13 +144,14 @@ def interpolate_scoremap(imgID, heatMap, cut, imgshape):
                                                                     cut:heatMap.shape[1] - cut]
 
     # 보간 전의 blank 값을 출력
-    print(f"Original blank (before interpolation):\n{blank}")
+    #print(f"Original blank (before interpolation):\n{blank}")
 
     # 'nearest' 보간으로 크기 조정
     interpolated_blank = F.interpolate(blank[:, :].unsqueeze(0).unsqueeze(0), size=imgshape, mode='nearest')
 
     # 보간 후의 값을 출력
-    print(f"Interpolated blank (after interpolation):\n{interpolated_blank.squeeze().cpu().numpy()}")
+
+    #print(f"Interpolated blank (after interpolation):\n{interpolated_blank.squeeze().cpu().numpy()}")
 
     return interpolated_blank
 
