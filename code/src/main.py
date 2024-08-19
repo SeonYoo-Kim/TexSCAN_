@@ -81,8 +81,8 @@ def main():
             # einops.rearrange :  i c h w의 차원을 i (h w) c로 변경, (h w)는 곱해짐 (40*40 → 1600)
             # 이후에 1번 자리에 1차원 추가 (i, 1, 1600, c)
             # heatMap2 = calc_score(gallery2, gallery2, 0) # 각 픽셀에서 가까운 400개와의 평균거리 히트맵
-            heatMap2 = calc_dbscan(gallery2, 0, e, m)
-            label_amount.append(heatMap2.label_amount)
+            heatMap2 = calc_dbscan(gallery2, 0, e, label_amount)
+
 
             for imgID in range(x.shape[0]):
                 cut2 = 3
@@ -176,7 +176,7 @@ def get_feature(model, img, device, outputs):
     outputs.clear()
     return [layer2_feature]
 
-def calc_dbscan(gallery, layerID, e, m):
+def calc_dbscan(gallery, layerID, e, label_amount):
     # gallery = (i, 1, 1600, c)
     heatmap = np.zeros((gallery.shape[0], gallery.shape[2]))  # (i, 1600)
     scaler = StandardScaler()
@@ -193,6 +193,7 @@ def calc_dbscan(gallery, layerID, e, m):
         # 라벨을 빈도수에 따라 정렬합니다.
         ranked_cluster = rank_labels(labels)
         print(len(ranked_cluster))
+        label_amount.append(len(ranked_cluster))
 
         # 라벨을 사용하여 히트맵을 생성합니다.
         for idx in range(len(labels)):
@@ -207,7 +208,7 @@ def calc_dbscan(gallery, layerID, e, m):
 
     # 히트맵을 원래 이미지의 2D 형식으로 변환합니다.
     dim = int(np.sqrt(gallery.shape[2]))  # 예를 들어, 1600이면 40x40이 됩니다.
-    return heatmap.reshape(gallery.shape[0], dim, dim, len(ranked_cluster))  # (i, h, w)
+    return heatmap.reshape(gallery.shape[0], dim, dim), len(ranked_cluster)  # (i, h, w)
 
 
 # def calc_dbscan(gallery, layerID):
