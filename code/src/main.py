@@ -22,6 +22,8 @@ from sklearn.neighbors import NearestNeighbors
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--save_path", type=str, default="./result")
+    parser.add_argument("--e", type=int, default=50)
+    parser.add_argument("--m", type=int, default=200)
     #parser.add_argument('--dataset_category', '-d', choices=['MVTec', 'BTAD', 'WFDD', 'WFT'], default='MVTec')
     return parser.parse_args()
 
@@ -38,11 +40,9 @@ def main():
     # set model's intermediate outputs
     outputs = []
 
-    e = 50
-    m = 50
-    param_txt = open('result/param.txt', 'a')
-    param_txt.write("eps : " + str(e) + "\tmin_samples : " + str(m))
-    param_txt.close()
+    # e = 50
+    # m = 50
+
     def hook(module, input, output):
         outputs.append(output)
 
@@ -81,7 +81,7 @@ def main():
             # einops.rearrange :  i c h w의 차원을 i (h w) c로 변경, (h w)는 곱해짐 (40*40 → 1600)
             # 이후에 1번 자리에 1차원 추가 (i, 1, 1600, c)
             # heatMap2 = calc_score(gallery2, gallery2, 0) # 각 픽셀에서 가까운 400개와의 평균거리 히트맵
-            heatMap2 = calc_dbscan(gallery2, 0, e, label_amount)
+            heatMap2 = calc_dbscan(gallery2, 0, args.e, args.m, label_amount)
 
 
             for imgID in range(x.shape[0]):
@@ -94,9 +94,6 @@ def main():
                 score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[2]-cut_surrounding,
                                       cut_surrounding:x.shape[2] - cut_surrounding])
                 scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
-
-        param_txt = open('result/param.txt', 'a')
-        param_txt.write("\n" + class_name + " - num(label) : " + ' '.join(map(str, label_amount)) + "\n")
 
         ##################################################
         # calculate image-level ROC AUC score
@@ -122,6 +119,11 @@ def main():
         total_pixel_roc_auc.append(per_pixel_rocauc)
         print('%s pixel ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
         fig_pixel_rocauc.plot(fpr, tpr, label='%s ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
+
+        param_txt = open('result/param.txt', 'a')
+        param_txt.write("eps : " + str(e) + "\tmin_samples : " + str(m)+"\timg_roc_auc :"+f"{roc_auc}"+"\tpix_roc_auc :"+f"{per_pixel_rocauc}")
+        param_txt.write("\n" + class_name + " - num(label) : " + ' '.join(map(str, label_amount)) + "\n")
+        param_txt.close()
 
         # get optimal threshold
         precision, recall, thresholds = precision_recall_curve(flatten_gt_mask_list, flatten_score_map_list)
@@ -176,11 +178,11 @@ def get_feature(model, img, device, outputs):
     outputs.clear()
     return [layer2_feature]
 
-def calc_dbscan(gallery, layerID, e, label_amount):
+def calc_dbscan(gallery, layerID, e, m, label_amount):
     # gallery = (i, 1, 1600, c)
     heatmap = np.zeros((gallery.shape[0], gallery.shape[2]))  # (i, 1600)
     scaler = StandardScaler()
-    dbscan = DBSCAN(eps=e, min_samples=50)  # eps와 min_samples는 데이터에 맞게 조정하세요.
+    dbscan = DBSCAN(eps=e, min_samples=m)  # eps와 min_samples는 데이터에 맞게 조정하세요.
     for img_idx in range(gallery.shape[0]):
         # 각 이미지의 갤러리에서 특정 레이어ID의 데이터를 선택합니다.
         features = gallery[img_idx, layerID, :, :]  # (1600, c)
