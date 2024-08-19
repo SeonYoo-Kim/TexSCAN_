@@ -100,7 +100,7 @@ def main():
         # 클래스 단위
         fpr, tpr, _ = roc_curve(lable_list, scores) # return FPRs, TPRs, Thresholds
         roc_auc = roc_auc_score(lable_list, scores) # return roc_score
-        img_log_txt = open('result/img_log.txt', 'w')
+        img_log_txt = open('result/img_log.txt', 'a')
         img_log_txt.write(f"{roc_auc}\n")
         class_txt = open('result/class_name.txt', 'w')
         class_txt.write(f"{class_name}\n")
@@ -114,7 +114,7 @@ def main():
 
         fpr, tpr, _ = roc_curve(flatten_gt_mask_list, flatten_score_map_list)
         per_pixel_rocauc = roc_auc_score(flatten_gt_mask_list, flatten_score_map_list)
-        pix_log_txt = open('result/pix_log.txt', 'w')
+        pix_log_txt = open('result/pix_log.txt', 'a')
         pix_log_txt.write(f"{per_pixel_rocauc}\n")
         total_pixel_roc_auc.append(per_pixel_rocauc)
         print('%s pixel ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
