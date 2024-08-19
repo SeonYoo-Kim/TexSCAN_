@@ -6,6 +6,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.metrics import roc_curve
 from sklearn.metrics import precision_recall_curve
 from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import StandardScaler
 from collections import Counter
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
@@ -168,18 +169,21 @@ def get_feature(model, img, device, outputs):
 def calc_dbscan(gallery, layerID):
     # gallery = (i, 1, 1600, c)
     heatmap = np.zeros((gallery.shape[0], gallery.shape[2]))  # (i, 1600)
+    scaler = StandardScaler()
 
     for img_idx in range(gallery.shape[0]):
         # 각 이미지의 갤러리에서 특정 레이어ID의 데이터를 선택합니다.
         features = gallery[img_idx, layerID, :, :]  # (1600, c)
+        data_scaled = scaler.fit_transform(features)
 
         # DBSCAN 클러스터링을 수행합니다.
         dbscan = DBSCAN(eps=0.000000001, min_samples=5)  # eps와 min_samples는 데이터에 맞게 조정하세요.
-        labels = dbscan.fit_predict(features)  # (1600,)
-
+        labels = dbscan.fit_predict(data_scaled)  # (1600,)
+        print(len(labels))
+        
         # 라벨을 빈도수에 따라 정렬합니다.
         ranked_cluster = rank_labels(labels)
-        print(len(ranked_cluster))
+
 
         # 라벨을 사용하여 히트맵을 생성합니다.
         for idx in range(len(labels)):
