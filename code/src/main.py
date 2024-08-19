@@ -38,6 +38,11 @@ def main():
     # set model's intermediate outputs
     outputs = []
 
+    e = 50
+    m = 200
+    param_txt = open('result/param.txt', 'w')
+    param_txt.write("eps : " + str(e) + "\tmin_samples : " + str(m))
+    param_txt.close()
     def hook(module, input, output):
         outputs.append(output)
 
@@ -60,6 +65,7 @@ def main():
         score_map_list = []
         scores = []
         cut_surrounding = 32
+        label_amount = []
 
         # 이미지 단위
         for (x, y, mask) in tqdm(test_dataloader, '| feature extraction | test |'):
@@ -75,7 +81,8 @@ def main():
             # einops.rearrange :  i c h w의 차원을 i (h w) c로 변경, (h w)는 곱해짐 (40*40 → 1600)
             # 이후에 1번 자리에 1차원 추가 (i, 1, 1600, c)
             # heatMap2 = calc_score(gallery2, gallery2, 0) # 각 픽셀에서 가까운 400개와의 평균거리 히트맵
-            heatMap2 = calc_dbscan(gallery2, 0)
+            heatMap2 = calc_dbscan(gallery2, 0, e, m)
+            label_amount.append(heatMap2.len(label_amount))
 
             for imgID in range(x.shape[0]):
                 cut2 = 3
@@ -87,6 +94,9 @@ def main():
                 score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[2]-cut_surrounding,
                                       cut_surrounding:x.shape[2] - cut_surrounding])
                 scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
+
+        param_txt = open('result/param.txt', 'a')
+        param_txt.write("\n" + class_name + " - num(label) : " + ' '.join(map(str, label_amount)) + "\n")
 
         ##################################################
         # calculate image-level ROC AUC score
@@ -166,12 +176,11 @@ def get_feature(model, img, device, outputs):
     outputs.clear()
     return [layer2_feature]
 
-def calc_dbscan(gallery, layerID):
+def calc_dbscan(gallery, layerID, e, m):
     # gallery = (i, 1, 1600, c)
     heatmap = np.zeros((gallery.shape[0], gallery.shape[2]))  # (i, 1600)
     scaler = StandardScaler()
-    label_amount = []
-    dbscan = DBSCAN(eps=50, min_samples=200)  # eps와 min_samples는 데이터에 맞게 조정하세요.
+    dbscan = DBSCAN(eps=e, min_samples=m)  # eps와 min_samples는 데이터에 맞게 조정하세요.
     for img_idx in range(gallery.shape[0]):
         # 각 이미지의 갤러리에서 특정 레이어ID의 데이터를 선택합니다.
         features = gallery[img_idx, layerID, :, :]  # (1600, c)
@@ -184,7 +193,6 @@ def calc_dbscan(gallery, layerID):
         # 라벨을 빈도수에 따라 정렬합니다.
         ranked_cluster = rank_labels(labels)
         print(len(ranked_cluster))
-        label_amount.append(len(ranked_cluster))
 
         # 라벨을 사용하여 히트맵을 생성합니다.
         for idx in range(len(labels)):
@@ -197,14 +205,9 @@ def calc_dbscan(gallery, layerID):
     # 히트맵을 torch 텐서로 변환합니다.
     heatmap = torch.tensor(heatmap, dtype=torch.float32).clone()
 
-    param_txt = open('result/param.txt', 'a')
-    param_txt.write("eps : "+f"{dbscan.eps}\t"+"min_samples : "+f"{dbscan.min_samples}\n"+
-                    "label_amount: " + ' '.join(map(str, label_amount)) + "\n")
-
-
     # 히트맵을 원래 이미지의 2D 형식으로 변환합니다.
     dim = int(np.sqrt(gallery.shape[2]))  # 예를 들어, 1600이면 40x40이 됩니다.
-    return heatmap.reshape(gallery.shape[0], dim, dim)  # (i, h, w)
+    return heatmap.reshape(gallery.shape[0], dim, dim, len(ranked_cluster))  # (i, h, w)
 
 
 # def calc_dbscan(gallery, layerID):
