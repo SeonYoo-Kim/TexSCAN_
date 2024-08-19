@@ -18,7 +18,6 @@ import datasets.mvtec as mvtec
 from einops import rearrange
 from sklearn.neighbors import NearestNeighbors
 
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--save_path", type=str, default="./result")
@@ -42,9 +41,6 @@ def main():
     model.eval()
     # set model's intermediate outputs
     outputs = []
-
-    # e = 50
-    # m = 50
 
     def hook(module, input, output):
         outputs.append(output)
@@ -90,10 +86,8 @@ def main():
             for imgID in range(x.shape[0]):
                 cut2 = 3
                 newHeat = interpolate_scoremap(imgID, heatMap2, cut2, x.shape[2]) # 상하좌우 3씩 깎고 다시 보간
-                # newHeat = gaussian_filter(newHeat.squeeze().cpu().detach().numpy(), sigma=4)
-                # newHeat = torch.from_numpy(newHeat.astype(np.float32)).clone().unsqueeze(0).unsqueeze(0)
-                # newHeat = torch.tensor(newHeat, dtype=torch.float32).clone()
-                # print(f"newHeat shape: {newHeat.shape}")
+                newHeat = gaussian_filter(newHeat.squeeze().cpu().detach().numpy(), sigma=4)
+                newHeat = torch.from_numpy(newHeat.astype(np.float32)).clone().unsqueeze(0).unsqueeze(0)
                 score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[2]-cut_surrounding,
                                       cut_surrounding:x.shape[2] - cut_surrounding])
                 scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
@@ -141,7 +135,6 @@ def main():
         fig.tight_layout()
         fig.savefig(os.path.join(args.save_path, 'roc_curve.png'), dpi=100)
 
-
 # def interpolate_scoremap(imgID, heatMap, cut, imgshape):
 #     # blank = torch.ones_like(heatMap[imgID, :, :]) * heatMap[imgID, :, :].min()
 #     blank = torch.zeros_like(heatMap[imgID, :, :])
@@ -154,23 +147,16 @@ def main():
 def interpolate_scoremap(imgID, heatMap, cut, imgshape):
     # 히트맵의 최소값이 0인지 확인
     blank = torch.zeros_like(heatMap[imgID, :, :])
-
     # 해당 영역에 히트맵 값을 복사
     blank[cut:heatMap.shape[1] - cut, cut:heatMap.shape[1] - cut] = heatMap[imgID, cut:heatMap.shape[1] - cut,
                                                                     cut:heatMap.shape[1] - cut]
-
-    # 'nearest' 보간으로 크기 조정
     interpolated_blank = F.interpolate(blank[:, :].unsqueeze(0).unsqueeze(0), size=imgshape, mode='bilinear', align_corners=False)
-
     return interpolated_blank
-
 
 def get_feature(model, img, device, outputs):
     with torch.no_grad():
         _ = model(img.to(device))
-
     layer2_feature = outputs[-1]
-
     outputs.clear()
     return [layer2_feature]
 
@@ -183,8 +169,6 @@ def calc_dbscan(gallery, layerID, e, m, label_amount):
         # 각 이미지의 갤러리에서 특정 레이어ID의 데이터를 선택합니다.
         features = gallery[img_idx, layerID, :, :]  # (1600, c)
         data_scaled = scaler.fit_transform(features)
-
-        # DBSCAN 클러스터링을 수행합니다.
 
         labels = dbscan.fit_predict(data_scaled)  # (1600,)
         print(labels)
@@ -199,31 +183,12 @@ def calc_dbscan(gallery, layerID, e, m, label_amount):
                 heatmap[img_idx, idx] = 0
             else:
                 heatmap[img_idx, idx] = 1
-
-    #print(f"Initial heatmap:\n{heatmap}")
     # 히트맵을 torch 텐서로 변환합니다.
     heatmap = torch.tensor(heatmap, dtype=torch.float32).clone()
 
     # 히트맵을 원래 이미지의 2D 형식으로 변환합니다.
     dim = int(np.sqrt(gallery.shape[2]))  # 예를 들어, 1600이면 40x40이 됩니다.
     return heatmap.reshape(gallery.shape[0], dim, dim) # (i, h, w)
-
-
-# def calc_dbscan(gallery, layerID):
-#     # gallery = (i, 1, 1600, c)
-#     heatmap = np.zeros((gallery.shape[0], gallery.shape[2])) # i, 1600
-#     dbscan = DBSCAN(eps=0.2, min_samples=400) # DBSCAN (eps : epsilon, min_samples : min point)
-#     labels = dbscan.fit(gallery[ :, layerID, :, :])
-#     ranked_cluster = rank_labels(labels)
-#     for idx, i in enumerate(labels) :
-#         if i == ranked_cluster[0]:
-#             labels[idx] = 0
-#         else :
-#             labels[idx] = 1
-#         heatmap[idx, :] = labels[idx]
-#         heatmap = torch.from_numpy(heatmap.astype(np.float32)).clone()
-#     dim = int(np.sqrt(gallery.shape[2]))
-#     return heatmap.reshape(gallery.shape[0], dim, -1)
 
 def calc_score(test, gallery, layerID):
     # test = gallery = (i, 1, 1600, c)
@@ -238,13 +203,9 @@ def calc_score(test, gallery, layerID):
     dim = int(np.sqrt(test.shape[2]))
     return heatmap.reshape(test.shape[0], dim, -1)
 
-
 def rank_labels(labels):
-    # 라벨의 빈도를 계산합니다.
     label_counts = Counter(labels)
-    # 빈도순으로 라벨을 정렬합니다.
     sorted_labels = sorted(label_counts.items(), key=lambda item: item[1], reverse=True)
-    # 결과를 리스트로 반환합니다.
     return [label for label, count in sorted_labels]
 
 def visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, save_path, class_name, vis_num, cut_pixel):
@@ -281,14 +242,11 @@ def visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, sav
         fig_img.clf()
         plt.close(fig_img)
 
-
 def denormalization(x):
     mean = np.array([0.485, 0.456, 0.406])
     std = np.array([0.229, 0.224, 0.225])
     x = (((x.transpose(1, 2, 0) * std) + mean) * 255.).astype(np.uint8)
     return x
 
-
 if __name__ == '__main__':
     main()
-
