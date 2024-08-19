@@ -179,7 +179,7 @@ def calc_dbscan(gallery, layerID):
 
         # 라벨을 빈도수에 따라 정렬합니다.
         ranked_cluster = rank_labels(labels)
-        print("클러스터 개수"+len(ranked_cluster))
+        print(len(ranked_cluster))
 
         # 라벨을 사용하여 히트맵을 생성합니다.
         for idx in range(len(labels)):
