@@ -121,7 +121,7 @@ def main():
         fig_pixel_rocauc.plot(fpr, tpr, label='%s ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
 
         param_txt = open('result/param.txt', 'a')
-        param_txt.write("eps : " + str(e) + "\tmin_samples : " + str(m)+"\timg_roc_auc :"+f"{roc_auc}"+"\tpix_roc_auc :"+f"{per_pixel_rocauc}")
+        param_txt.write("eps : " + str(args.e) + "\tmin_samples : " + str(args.m)+"\timg_roc_auc :"+f"{roc_auc}"+"\tpix_roc_auc :"+f"{per_pixel_rocauc}")
         param_txt.write("\n" + class_name + " - num(label) : " + ' '.join(map(str, label_amount)) + "\n")
         param_txt.close()
 
