@@ -170,19 +170,21 @@ def calc_dbscan(gallery, layerID):
     # gallery = (i, 1, 1600, c)
     heatmap = np.zeros((gallery.shape[0], gallery.shape[2]))  # (i, 1600)
     scaler = StandardScaler()
-
+    label_amount = []
+    dbscan = DBSCAN(eps=100, min_samples=400)  # eps와 min_samples는 데이터에 맞게 조정하세요.
     for img_idx in range(gallery.shape[0]):
         # 각 이미지의 갤러리에서 특정 레이어ID의 데이터를 선택합니다.
         features = gallery[img_idx, layerID, :, :]  # (1600, c)
         data_scaled = scaler.fit_transform(features)
 
         # DBSCAN 클러스터링을 수행합니다.
-        dbscan = DBSCAN(eps=50, min_samples=200)  # eps와 min_samples는 데이터에 맞게 조정하세요.
+
         labels = dbscan.fit_predict(data_scaled)  # (1600,)
         print(labels)
         # 라벨을 빈도수에 따라 정렬합니다.
         ranked_cluster = rank_labels(labels)
         print(len(ranked_cluster))
+        label_amount.append(len(ranked_cluster))
 
         # 라벨을 사용하여 히트맵을 생성합니다.
         for idx in range(len(labels)):
@@ -191,9 +193,13 @@ def calc_dbscan(gallery, layerID):
             else:
                 heatmap[img_idx, idx] = 1
 
-    print(f"Initial heatmap:\n{heatmap}")
+    #print(f"Initial heatmap:\n{heatmap}")
     # 히트맵을 torch 텐서로 변환합니다.
     heatmap = torch.tensor(heatmap, dtype=torch.float32).clone()
+
+    param_txt = open('result/param.txt', 'w')
+    param_txt.write("eps : "+f"{dbscan.eps}\t"+"min_samples : "+f"{dbscan.min_samples}\n"+f"{label_amount}")
+
 
     # 히트맵을 원래 이미지의 2D 형식으로 변환합니다.
     dim = int(np.sqrt(gallery.shape[2]))  # 예를 들어, 1600이면 40x40이 됩니다.
