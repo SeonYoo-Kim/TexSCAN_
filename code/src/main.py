@@ -126,7 +126,8 @@ def main():
 
 
 def interpolate_scoremap(imgID, heatMap, cut, imgshape):
-    blank = torch.ones_like(heatMap[imgID, :, :]) * heatMap[imgID, :, :].min()
+    # blank = torch.ones_like(heatMap[imgID, :, :]) * heatMap[imgID, :, :].min()
+    blank = torch.zeros_like(heatMap[imgID, :, :])
     blank[cut:heatMap.shape[1] - cut, cut:heatMap.shape[1] - cut] = heatMap[imgID, cut:heatMap.shape[1] - cut,
                                                                     cut:heatMap.shape[1] - cut]
     # 상하좌우 3씩 또 깎음
