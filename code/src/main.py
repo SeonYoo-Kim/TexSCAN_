@@ -197,8 +197,9 @@ def calc_dbscan(gallery, layerID):
     # 히트맵을 torch 텐서로 변환합니다.
     heatmap = torch.tensor(heatmap, dtype=torch.float32).clone()
 
-    param_txt = open('result/param.txt', 'w')
-    param_txt.write("eps : "+f"{dbscan.eps}\t"+"min_samples : "+f"{dbscan.min_samples}\n"+"label_amount: " + ' '.join(map(str, label_amount)) + "\n")
+    param_txt = open('result/param.txt', 'a')
+    param_txt.write("eps : "+f"{dbscan.eps}\t"+"min_samples : "+f"{dbscan.min_samples}\n"+
+                    "label_amount: " + ' '.join(map(str, label_amount)) + "\n")
 
 
     # 히트맵을 원래 이미지의 2D 형식으로 변환합니다.
