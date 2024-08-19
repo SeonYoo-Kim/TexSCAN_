@@ -8,8 +8,8 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms as T
 
-CLASS_NAMES = ['carpet'] # 테스트용
-#CLASS_NAMES = ['carpet', 'grid', 'leather', 'tile', 'wood']
+# CLASS_NAMES = ['carpet'] # 테스트용
+CLASS_NAMES = ['carpet', 'grid', 'leather', 'tile', 'wood']
 #CLASS_NAMES = ['02']
 #CLASS_NAMES = ['texture_1', 'texture_2']
 #CLASS_NAMES = ['grey_cloth', 'grid_cloth', 'pink_flower', 'yellow_cloth']
