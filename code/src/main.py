@@ -208,7 +208,7 @@ def calc_dbscan(gallery, layerID, e, label_amount):
 
     # 히트맵을 원래 이미지의 2D 형식으로 변환합니다.
     dim = int(np.sqrt(gallery.shape[2]))  # 예를 들어, 1600이면 40x40이 됩니다.
-    return heatmap.reshape(gallery.shape[0], dim, dim), len(ranked_cluster)  # (i, h, w)
+    return heatmap.reshape(gallery.shape[0], dim, dim) # (i, h, w)
 
 
 # def calc_dbscan(gallery, layerID):
