@@ -179,13 +179,12 @@ def calc_dbscan(gallery, layerID):
         ranked_cluster = rank_labels(labels)
 
         # 라벨을 사용하여 히트맵을 생성합니다.
-        for idx, i in enumerate(labels):
-            if i == ranked_cluster[0]:
-                labels[idx] = 0
+        for idx in range(len(labels)):
+            if labels[idx] == ranked_cluster[0]:
+                heatmap[img_idx, idx] = 0
             else:
-                labels[idx] = 1
-            print(f"Labels after DBSCAN:\n{labels[idx]}")
-            heatmap[idx, :] = labels[idx]
+                heatmap[img_idx, idx] = 1
+
     print(f"Initial heatmap:\n{heatmap}")
     # 히트맵을 torch 텐서로 변환합니다.
     heatmap = torch.tensor(heatmap, dtype=torch.float32).clone()
