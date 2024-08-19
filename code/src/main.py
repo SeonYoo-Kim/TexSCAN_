@@ -39,8 +39,8 @@ def main():
     outputs = []
 
     e = 50
-    m = 200
-    param_txt = open('result/param.txt', 'w')
+    m = 150
+    param_txt = open('result/param.txt', 'a')
     param_txt.write("eps : " + str(e) + "\tmin_samples : " + str(m))
     param_txt.close()
     def hook(module, input, output):
@@ -180,7 +180,7 @@ def calc_dbscan(gallery, layerID, e, label_amount):
     # gallery = (i, 1, 1600, c)
     heatmap = np.zeros((gallery.shape[0], gallery.shape[2]))  # (i, 1600)
     scaler = StandardScaler()
-    dbscan = DBSCAN(eps=e, min_samples=200)  # eps와 min_samples는 데이터에 맞게 조정하세요.
+    dbscan = DBSCAN(eps=e, min_samples=150)  # eps와 min_samples는 데이터에 맞게 조정하세요.
     for img_idx in range(gallery.shape[0]):
         # 각 이미지의 갤러리에서 특정 레이어ID의 데이터를 선택합니다.
         features = gallery[img_idx, layerID, :, :]  # (1600, c)
