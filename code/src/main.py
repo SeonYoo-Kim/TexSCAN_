@@ -163,7 +163,7 @@ def interpolate_scoremap(imgID, heatMap, cut, imgshape):
     #print(f"Original blank (before interpolation):\n{blank}")
 
     # 'nearest' 보간으로 크기 조정
-    interpolated_blank = F.interpolate(blank[:, :].unsqueeze(0).unsqueeze(0), size=imgshape, mode='nearest')
+    interpolated_blank = F.interpolate(blank[:, :].unsqueeze(0).unsqueeze(0), size=imgshape, mode='bininear', align_corners=False)
 
     # 보간 후의 값을 출력
 
