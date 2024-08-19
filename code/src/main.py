@@ -174,11 +174,12 @@ def calc_dbscan(gallery, layerID):
         features = gallery[img_idx, layerID, :, :]  # (1600, c)
 
         # DBSCAN 클러스터링을 수행합니다.
-        dbscan = DBSCAN(eps=0.01, min_samples=10)  # eps와 min_samples는 데이터에 맞게 조정하세요.
+        dbscan = DBSCAN(eps=0.01, min_samples=5)  # eps와 min_samples는 데이터에 맞게 조정하세요.
         labels = dbscan.fit_predict(features)  # (1600,)
 
         # 라벨을 빈도수에 따라 정렬합니다.
         ranked_cluster = rank_labels(labels)
+        print("클러스터 개수"+len(ranked_cluster))
 
         # 라벨을 사용하여 히트맵을 생성합니다.
         for idx in range(len(labels)):
