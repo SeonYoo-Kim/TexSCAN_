@@ -84,7 +84,7 @@ python main.py --e 35 --m 650 --param_path "./result/e=35/param.txt" --img_path 
 python main.py --e 35 --m 600 --param_path "./result/e=35/param.txt" --img_path "./result/e=35/img.txt" --pix_path "./result/e=35/pix.txt"
 python main.py --e 35 --m 550 --param_path "./result/e=35/param.txt" --img_path "./result/e=35/img.txt" --pix_path "./result/e=35/pix.txt"
 python main.py --e 35 --m 500 --param_path "./result/e=35/param.txt" --img_path "./result/e=35/img.txt" --pix_path "./result/e=35/pix.txt"
-python main.py --e 35 --m 450 --param_path "./result/e=35/param.txt" --img_path "./result/e=35/img.txt" --pix_path "./result/e=35pix.txt"
+python main.py --e 35 --m 450 --param_path "./result/e=35/param.txt" --img_path "./result/e=35/img.txt" --pix_path "./result/e=35/pix.txt"
 python main.py --e 35 --m 400 --param_path "./result/e=35/param.txt" --img_path "./result/e=35/img.txt" --pix_path "./result/e=35/pix.txt"
 python main.py --e 35 --m 350 --param_path "./result/e=35/param.txt" --img_path "./result/e=35/img.txt" --pix_path "./result/e=35/pix.txt"
 python main.py --e 35 --m 300 --param_path "./result/e=35/param.txt" --img_path "./result/e=35/img.txt" --pix_path "./result/e=35/pix.txt"
