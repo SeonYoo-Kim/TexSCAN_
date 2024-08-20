@@ -91,12 +91,12 @@ def main():
                 score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[2]-cut_surrounding,
                                       cut_surrounding:x.shape[2] - cut_surrounding])
 
-                # if label_amount[-1] >= 2:  # label_amount[-1]은 calc_dbscan에서 클러스터 개수를 저장
-                #     scores.append(1)  # anomaly가 존재하는 것으로 간주
-                # else:
-                #     scores.append(0)  # anomaly가 없다고 간주
+                if label_amount[-1] >= 2:  # label_amount[-1]은 calc_dbscan에서 클러스터 개수를 저장
+                    scores.append(1)  # anomaly가 존재하는 것으로 간주
+                else:
+                    scores.append(0)  # anomaly가 없다고 간주
 
-                scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
+                # scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
 
         ##################################################
         # calculate image-level ROC AUC score
