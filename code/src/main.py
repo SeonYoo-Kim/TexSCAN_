@@ -136,7 +136,7 @@ def main():
         threshold = thresholds[np.argmax(f1)]
 
         # visualize localization result
-        visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, args.save_path, class_name, 5, cut_surrounding)
+        visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, args.save_path, class_name, cut_surrounding)
 
         fig.tight_layout()
         fig.savefig(os.path.join(args.save_path, 'roc_curve.png'), dpi=100)
@@ -214,8 +214,8 @@ def rank_labels(labels):
     sorted_labels = sorted(label_counts.items(), key=lambda item: item[1], reverse=True)
     return [label for label, count in sorted_labels]
 
-def visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, save_path, class_name, vis_num, cut_pixel):
-    for t_idx in range(vis_num):
+def visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, save_path, class_name, cut_pixel):
+    for t_idx in range(len(gt_mask_list)):
         test_img = test_imgs[t_idx]
         test_img = denormalization(test_img)
         test_gt = gt_mask_list[t_idx].transpose(1, 2, 0).squeeze()
