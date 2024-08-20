@@ -86,8 +86,8 @@ def main():
             for imgID in range(x.shape[0]):
                 cut2 = 3
                 newHeat = interpolate_scoremap(imgID, heatMap2, cut2, x.shape[2]) # 상하좌우 3씩 깎고 다시 보간
-                #newHeat = gaussian_filter(newHeat.squeeze().cpu().detach().numpy(), sigma=4)
-                #newHeat = torch.from_numpy(newHeat.astype(np.float32)).clone().unsqueeze(0).unsqueeze(0)
+                newHeat = gaussian_filter(newHeat.squeeze().cpu().detach().numpy(), sigma=4)
+                newHeat = torch.from_numpy(newHeat.astype(np.float32)).clone().unsqueeze(0).unsqueeze(0)
                 score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[2]-cut_surrounding,
                                       cut_surrounding:x.shape[2] - cut_surrounding])
                 scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
