@@ -86,17 +86,17 @@ def main():
             for imgID in range(x.shape[0]):
                 cut2 = 3
                 newHeat = interpolate_scoremap(imgID, heatMap2, cut2, x.shape[2]) # 상하좌우 3씩 깎고 다시 보간
-                #newHeat = gaussian_filter(newHeat.squeeze().cpu().detach().numpy(), sigma=4)
-                #newHeat = torch.from_numpy(newHeat.astype(np.float32)).clone().unsqueeze(0).unsqueeze(0)
+                newHeat = gaussian_filter(newHeat.squeeze().cpu().detach().numpy(), sigma=4)
+                newHeat = torch.from_numpy(newHeat.astype(np.float32)).clone().unsqueeze(0).unsqueeze(0)
                 score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[2]-cut_surrounding,
                                       cut_surrounding:x.shape[2] - cut_surrounding])
 
-                if label_amount[-1] >= 2:  # label_amount[-1]은 calc_dbscan에서 클러스터 개수를 저장
-                    scores.append(1)  # anomaly가 존재하는 것으로 간주
-                else:
-                    scores.append(0)  # anomaly가 없다고 간주
+                # if label_amount[-1] >= 2:  # label_amount[-1]은 calc_dbscan에서 클러스터 개수를 저장
+                #     scores.append(1)  # anomaly가 존재하는 것으로 간주
+                # else:
+                #     scores.append(0)  # anomaly가 없다고 간주
 
-                # scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
+                scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
 
         ##################################################
         # calculate image-level ROC AUC score
