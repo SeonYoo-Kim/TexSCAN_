@@ -170,7 +170,7 @@ for e in $(seq 20 5 40)
 do
   for m in $(seq 1550 -50 50)
   do
-    python main.py --e $e + --m + $m + --dataset 'BTAD'
+    python main.py --e $e --m $m --dataset 'BTAD'
   done
 done
 
@@ -178,7 +178,7 @@ for e in $(seq 20 5 40)
 do
   for m in $(seq 1550 -50 50)
   do
-    python main.py --e $e + --m + $m + --dataset 'WFDD'
+    python main.py --e $e --m $m --dataset 'WFDD'
   done
 done
 
@@ -186,6 +186,6 @@ for e in $(seq 20 5 40)
 do
   for m in $(seq 1550 -50 50)
   do
-    python main.py --e $e + --m + $m + --dataset 'WFT'
+    python main.py --e $e --m $m --dataset 'WFT'
   done
 done
