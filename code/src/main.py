@@ -262,8 +262,8 @@ def visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, exp
         ax_img[3].imshow(test_pred_img)
         ax_img[3].title.set_text('Predicted anomalous image')
 
-        os.makedirs(os.path.join(exp_path, 'images'), exist_ok=True)
-        fig_img.savefig(os.path.join(exp_path, 'images', '%s_%03d.png' % (class_name, t_idx)), dpi=100)
+        os.makedirs(os.path.join(exp_path, 'images', class_name), exist_ok=True)
+        fig_img.savefig(os.path.join(exp_path, 'images', class_name, '%03d.png' % t_idx), dpi=100)
         fig_img.clf()
         plt.close(fig_img)
 
