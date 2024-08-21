@@ -196,10 +196,10 @@ def calc_dbscan(gallery, layerID, e, m, label_amount):
         data_scaled = scaler.fit_transform(features)
 
         labels = dbscan.fit_predict(data_scaled)  # (1600,)
-        print(labels)
+        # print(labels)
         # 라벨을 빈도수에 따라 정렬합니다.
         ranked_cluster = rank_labels(labels)
-        print(len(ranked_cluster))
+        # print(len(ranked_cluster))
         label_amount.append(len(ranked_cluster))
 
         # 라벨을 사용하여 히트맵을 생성합니다.
