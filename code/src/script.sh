@@ -64,6 +64,7 @@
 python main.py --e 25 --m 40 --param_path "./result/e=25/param.txt" --img_path "./result/e=25/img.txt" --pix_path "./result/e=25/pix.txt"
 python main.py --e 25 --m 30 --param_path "./result/e=25/param.txt" --img_path "./result/e=25/img.txt" --pix_path "./result/e=25/pix.txt"
 python main.py --e 25 --m 20 --param_path "./result/e=25/param.txt" --img_path "./result/e=25/img.txt" --pix_path "./result/e=25/pix.txt"
+python main.py --e 25 --m 10 --param_path "./result/e=25/param.txt" --img_path "./result/e=25/img.txt" --pix_path "./result/e=25/pix.txt"
 
 #python main.py --e 30 --m 1550 --param_path "./result/e=30/param.txt" --img_path "./result/e=30/img.txt" --pix_path "./result/e=30/pix.txt"
 #python main.py --e 30 --m 1500 --param_path "./result/e=30/param.txt" --img_path "./result/e=30/img.txt" --pix_path "./result/e=30/pix.txt"
