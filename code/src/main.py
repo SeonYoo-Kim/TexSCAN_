@@ -129,7 +129,7 @@ def main():
         print('%s pixel ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
         fig_pixel_rocauc.plot(fpr, tpr, label='%s ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
 
-        exp_path = os.path.join(args.save_path, str(dataset), 'e=' + str(args.e))
+        exp_path = os.path.join(args.save_path, args.dataset, 'e=' + str(args.e))
         os.makedirs(exp_path, exist_ok=True)
 
         img_log_txt = open(os.path.join(exp_path, 'img_auroc.txt'), 'a')
