@@ -18,6 +18,7 @@ import datasets.MVTec
 import datasets.BTAD
 import datasets.WFDD
 import datasets.WFT
+import datasets.DTD_sys
 from einops import rearrange
 from sklearn.neighbors import NearestNeighbors
 
@@ -42,6 +43,9 @@ def main():
         dataset = datasets.WFDD
     elif args.dataset == 'WFT':
         dataset = datasets.WFT
+    elif args.dataset == 'DTD-sys':
+        dataset = datasets.DTD_sys
+
 
     # load model
     model = wide_resnet50_2(pretrained=True, progress=True)
