@@ -1,5 +1,5 @@
-python main.py --e 25 --m 50 --dataset 'DTD-sys'
-python main.py --e 25 --m 200 --dataset 'MVTec'
+#python main.py --e 25 --m 50 --dataset 'DTD-sys'
+#python main.py --e 25 --m 200 --dataset 'MVTec'
 
 
 #python main.py --e 20 --m 1550 --param_path "./result/e=20/param.txt" --img_path "./result/e=20/img.txt" --pix_path "./result/e=20/pix.txt"
@@ -166,3 +166,26 @@ python main.py --e 25 --m 200 --dataset 'MVTec'
 #python main.py --e 40 --m 50 --param_path "./result/e=40/param.txt" --img_path "./result/e=40/img.txt" --pix_path "./result/e=40/pix.txt"
 
 
+for e in $(seq 20 5 40)
+do
+  for m in $(seq 1550 -50 50)
+  do
+    python main.py --e $e + --m + $m + --dataset 'BTAD'
+  done
+done
+
+for e in $(seq 20 5 40)
+do
+  for m in $(seq 1550 -50 50)
+  do
+    python main.py --e $e + --m + $m + --dataset 'WFDD'
+  done
+done
+
+for e in $(seq 20 5 40)
+do
+  for m in $(seq 1550 -50 50)
+  do
+    python main.py --e $e + --m + $m + --dataset 'WFT'
+  done
+done
