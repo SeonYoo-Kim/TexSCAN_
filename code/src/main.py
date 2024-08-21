@@ -14,7 +14,10 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision.models import wide_resnet50_2
-import datasets.mvtec as mvtec
+import datasets.MVTec
+import datasets.BTAD
+import datasets.WFDD
+import datasets.WFT
 from einops import rearrange
 from sklearn.neighbors import NearestNeighbors
 
@@ -23,10 +26,7 @@ def parse_args():
     parser.add_argument("--save_path", type=str, default="./result")
     parser.add_argument("--e", type=int, default=50)
     parser.add_argument("--m", type=int, default=200)
-    parser.add_argument("--param_path", type=str, default="./result/param.txt")
-    parser.add_argument("--img_path", type=str, default="./result/img_log.txt")
-    parser.add_argument("--pix_path", type=str, default="./result/pix_log.txt")
-    #parser.add_argument('--dataset_category', '-d', choices=['MVTec', 'BTAD', 'WFDD', 'WFT'], default='MVTec')
+    parser.add_argument('--dataset', choices=['MVTec', 'BTAD', 'WFDD', 'WFT'], default='MVTec')
     return parser.parse_args()
 
 def main():
@@ -34,6 +34,14 @@ def main():
     print('pwd=', os.getcwd())
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     np.set_printoptions(threshold=np.inf)
+    if args.dataset == 'MVTec':
+        dataset = datasets.MVTec
+    elif args.dataset == 'BTAD':
+        dataset = datasets.BTAD
+    elif args.dataset == 'WFDD':
+        dataset = datasets.WFDD
+    elif args.dataset == 'WFT':
+        dataset = datasets.WFT
 
     # load model
     model = wide_resnet50_2(pretrained=True, progress=True)
@@ -54,8 +62,8 @@ def main():
     total_roc_auc = []
     total_pixel_roc_auc = []
 
-    for class_name in mvtec.CLASS_NAMES:
-        test_dataset = mvtec.MVTecDataset(class_name=class_name, is_train=False)
+    for class_name in dataset.CLASS_NAMES:
+        test_dataset = dataset.Dataset(class_name=class_name, is_train=False)
         test_dataloader = DataLoader(test_dataset, batch_size=1, pin_memory=True)
 
         lable_list = []
@@ -103,10 +111,6 @@ def main():
         # 클래스 단위
         fpr, tpr, _ = roc_curve(lable_list, scores) # return FPRs, TPRs, Thresholds
         roc_auc = roc_auc_score(lable_list, scores) # return roc_score
-        img_log_txt = open(args.img_path, 'a')
-        img_log_txt.write(f"{roc_auc}\n")
-        class_txt = open('result/class_name.txt', 'w')
-        class_txt.write(f"{class_name}\n")
         total_roc_auc.append(roc_auc)
         print('%s ROCAUC: %.3f' % (class_name, roc_auc))
         fig_img_rocauc.plot(fpr, tpr, label='%s ROCAUC: %.3f' % (class_name, roc_auc))
@@ -117,13 +121,24 @@ def main():
 
         fpr, tpr, _ = roc_curve(flatten_gt_mask_list, flatten_score_map_list)
         per_pixel_rocauc = roc_auc_score(flatten_gt_mask_list, flatten_score_map_list)
-        pix_log_txt = open(args.pix_path, 'a')
-        pix_log_txt.write(f"{per_pixel_rocauc}\n")
         total_pixel_roc_auc.append(per_pixel_rocauc)
         print('%s pixel ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
         fig_pixel_rocauc.plot(fpr, tpr, label='%s ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
 
-        param_txt = open(args.param_path, 'a')
+        exp_path = os.path.join(args.save_path, dataset, 'e=' + str(args.e))
+        os.makedirs(exp_path, exist_ok=True)
+
+        img_log_txt = open(os.path.join(exp_path, 'img_auroc.txt'), 'a')
+        img_log_txt.write(f"{roc_auc}\n")
+        img_log_txt.close()
+        class_txt = open(os.path.join(exp_path, 'class_name.txt'), 'a')
+        class_txt.write(f"{class_name}\n")
+        class_txt.close()
+        pix_log_txt = open(os.path.join(exp_path, 'pxl_auroc.txt'), 'a')
+        pix_log_txt.write(f"{per_pixel_rocauc}\n")
+        pix_log_txt.close()
+
+        param_txt = open(os.path.join(exp_path, 'param.txt'), 'a')
         param_txt.write("eps : " + str(args.e) + "\tmin_samples : " + str(args.m)+"\timg_roc_auc :"+f"{roc_auc}"+"\tpix_roc_auc :"+f"{per_pixel_rocauc}")
         param_txt.write("\n" + class_name + " - num(label) : " + ' '.join(map(str, label_amount)) + "\n")
         param_txt.close()
@@ -136,10 +151,10 @@ def main():
         threshold = thresholds[np.argmax(f1)]
 
         # visualize localization result
-        visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, args.save_path, class_name, cut_surrounding)
+        visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, exp_path, class_name, cut_surrounding)
 
         fig.tight_layout()
-        fig.savefig(os.path.join(args.save_path, 'roc_curve.png'), dpi=100)
+        fig.savefig(os.path.join(exp_path, 'roc_curve.png'), dpi=100)
 
 # def interpolate_scoremap(imgID, heatMap, cut, imgshape):
 #     # blank = torch.ones_like(heatMap[imgID, :, :]) * heatMap[imgID, :, :].min()
@@ -214,7 +229,7 @@ def rank_labels(labels):
     sorted_labels = sorted(label_counts.items(), key=lambda item: item[1], reverse=True)
     return [label for label, count in sorted_labels]
 
-def visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, save_path, class_name, cut_pixel):
+def visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, exp_path, class_name, cut_pixel):
     for t_idx in range(len(gt_mask_list)):
         test_img = test_imgs[t_idx]
         test_img = denormalization(test_img)
@@ -243,8 +258,8 @@ def visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, sav
         ax_img[3].imshow(test_pred_img)
         ax_img[3].title.set_text('Predicted anomalous image')
 
-        os.makedirs(os.path.join(save_path, 'images'), exist_ok=True)
-        fig_img.savefig(os.path.join(save_path, 'images', '%s_%03d.png' % (class_name, t_idx)), dpi=100)
+        os.makedirs(os.path.join(exp_path, 'images'), exist_ok=True)
+        fig_img.savefig(os.path.join(exp_path, 'images', '%s_%03d.png' % (class_name, t_idx)), dpi=100)
         fig_img.clf()
         plt.close(fig_img)
 

@@ -10,8 +10,8 @@ from torchvision import transforms as T
 
 CLASS_NAMES = ['grey_cloth', 'grid_cloth', 'pink_flower', 'yellow_cloth']
 
-class MVTecDataset(Dataset):
-    def __init__(self, root_path='../data', class_name='carpet', is_train=True, resize=320, cropsize=320):
+class Dataset(Dataset):
+    def __init__(self, root_path='../data', class_name='grey_cloth', is_train=True, resize=320, cropsize=320):
 
         assert class_name in CLASS_NAMES, 'class_name: {}, should be in {}'.format(class_name, CLASS_NAMES)
         self.root_path = root_path
@@ -19,7 +19,7 @@ class MVTecDataset(Dataset):
         self.is_train = is_train
         self.resize = resize
         self.cropsize = cropsize
-        self.mvtec_folder_path = os.path.join(root_path, 'MVTec')
+        self.folder_path = os.path.join(root_path, 'WFDD')
 
         # download dataset if not exist
         # self.download()
@@ -58,8 +58,8 @@ class MVTecDataset(Dataset):
         phase = 'train' if self.is_train else 'test'
         x, y, mask = [], [], []
 
-        img_dir = os.path.join(self.mvtec_folder_path, self.class_name, phase)
-        gt_dir = os.path.join(self.mvtec_folder_path, self.class_name, 'ground_truth')
+        img_dir = os.path.join(self.folder_path, self.class_name, phase)
+        gt_dir = os.path.join(self.folder_path, self.class_name, 'ground_truth')
 
         img_types = sorted(os.listdir(img_dir))
         for img_type in img_types:

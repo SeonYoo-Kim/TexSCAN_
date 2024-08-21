@@ -8,15 +8,10 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms as T
 
-# CLASS_NAMES = ['carpet'] # 테스트용
-#CLASS_NAMES = ['carpet', 'grid', 'leather', 'tile', 'wood']
-#CLASS_NAMES = ['02']
-#CLASS_NAMES = ['texture_1', 'texture_2']
-#CLASS_NAMES = ['grey_cloth', 'grid_cloth', 'pink_flower', 'yellow_cloth']
 CLASS_NAMES = ['Blotchy_099', 'Fibrous_183', 'Marbled_078', 'Matted_069', 'Mesh_114', 'Perforated_037', 'Stratified_154', 'Woven_001', 'Woven_068', 'Woven_104', 'Woven_125', 'Woven_127']
 
-class MVTecDataset(Dataset):
-    def __init__(self, root_path='../data', class_name='carpet', is_train=True, resize=320, cropsize=320):
+class Dataset(Dataset):
+    def __init__(self, root_path='../data', class_name='Blotchy_099', is_train=True, resize=320, cropsize=320):
 
         assert class_name in CLASS_NAMES, 'class_name: {}, should be in {}'.format(class_name, CLASS_NAMES)
         self.root_path = root_path
@@ -24,7 +19,7 @@ class MVTecDataset(Dataset):
         self.is_train = is_train
         self.resize = resize
         self.cropsize = cropsize
-        self.mvtec_folder_path = os.path.join(root_path, 'MVTec')
+        self.folder_path = os.path.join(root_path, 'DTD-sys')
 
         # load dataset
         self.x, self.y, self.mask = self.load_dataset_folder()
@@ -62,8 +57,8 @@ class MVTecDataset(Dataset):
         # x : png이미지 하나하나의 경로가 sorted된 리스트, 모든 타입의 defect 다 있음
         # y : x의 요소 하나하나에 대한 라벨, 정상=0, 이상=1
 
-        img_dir = os.path.join(self.mvtec_folder_path, self.class_name, phase)
-        gt_dir = os.path.join(self.mvtec_folder_path, self.class_name, 'ground_truth')
+        img_dir = os.path.join(self.folder_path, self.class_name, phase)
+        gt_dir = os.path.join(self.folder_path, self.class_name, 'ground_truth')
 
         img_types = sorted(os.listdir(img_dir))
         for img_type in img_types:
