@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument("--save_path", type=str, default="./result")
     parser.add_argument("--e", type=int, default=50)
     parser.add_argument("--m", type=int, default=200)
-    parser.add_argument('--dataset', choices=['MVTec', 'BTAD', 'WFDD', 'WFT'], default='MVTec')
+    parser.add_argument('--dataset', choices=['MVTec', 'BTAD', 'WFDD', 'WFT', 'DTD-sys'], default='MVTec')
     return parser.parse_args()
 
 def main():
