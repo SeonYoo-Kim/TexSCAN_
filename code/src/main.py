@@ -1,6 +1,7 @@
 import argparse
 import numpy as np
 import os
+import time
 from tqdm import tqdm
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import roc_curve
@@ -25,7 +26,7 @@ from sklearn.neighbors import NearestNeighbors
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--save_path", type=str, default="./result")
-    parser.add_argument("--e", type=int, default=50)
+    parser.add_argument("--e", type=int, default=25)
     parser.add_argument("--m", type=int, default=200)
     parser.add_argument('--dataset', choices=['MVTec', 'BTAD', 'WFDD', 'WFT', 'DTD-sys'], default='MVTec')
     return parser.parse_args()
@@ -67,6 +68,7 @@ def main():
     total_pixel_roc_auc = []
 
     for class_name in dataset.CLASS_NAMES:
+        start_time = time.time()
         test_dataset = dataset.Dataset(class_name=class_name, is_train=False)
         test_dataloader = DataLoader(test_dataset, batch_size=1, pin_memory=True)
 
@@ -103,12 +105,12 @@ def main():
                 score_map_list.append(newHeat[:, :, cut_surrounding:x.shape[2]-cut_surrounding,
                                       cut_surrounding:x.shape[2] - cut_surrounding])
 
-                if label_amount[-1] >= 2:  # label_amount[-1]은 calc_dbscan에서 클러스터 개수를 저장
-                    scores.append(1)  # anomaly가 존재하는 것으로 간주
-                else:
-                    scores.append(0)  # anomaly가 없다고 간주
+                # if label_amount[-1] >= 2:  # label_amount[-1]은 calc_dbscan에서 클러스터 개수를 저장
+                #     scores.append(1)  # anomaly가 존재하는 것으로 간주
+                # else:
+                #     scores.append(0)  # anomaly가 없다고 간주
 
-                # scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
+                scores.append(score_map_list[-1].max().item()) # 스코어맵의 최대값을 image-level 스코어로 등록?
 
         ##################################################
         # calculate image-level ROC AUC score
@@ -159,6 +161,12 @@ def main():
 
         fig.tight_layout()
         fig.savefig(os.path.join(exp_path, 'roc_curve.png'), dpi=100)
+
+        elapsed_time = time.time() - start_time
+        time_log_txt = open(os.path.join(exp_path, 'time_log.txt'), 'a')
+        time_log_txt.write(f"{elapsed_time}\n")
+        time_log_txt.close()
+
 
 # def interpolate_scoremap(imgID, heatMap, cut, imgshape):
 #     # blank = torch.ones_like(heatMap[imgID, :, :]) * heatMap[imgID, :, :].min()
