@@ -35,7 +35,9 @@ def main():
     args = parse_args()
     print('pwd=', os.getcwd())
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     np.set_printoptions(threshold=np.inf)
+
     if args.dataset == 'MVTec':
         dataset = datasets.MVTec
     elif args.dataset == 'BTAD':
@@ -46,7 +48,6 @@ def main():
         dataset = datasets.WFT
     elif args.dataset == 'DTD-sys':
         dataset = datasets.DTD_sys
-
 
     # load model
     model = wide_resnet50_2(pretrained=True, progress=True)
@@ -150,14 +151,14 @@ def main():
         param_txt.close()
 
         # get optimal threshold
-        precision, recall, thresholds = precision_recall_curve(flatten_gt_mask_list, flatten_score_map_list)
-        a = 2 * precision * recall
-        b = precision + recall
-        f1 = np.divide(a, b, out=np.zeros_like(a), where=b != 0)
-        threshold = thresholds[np.argmax(f1)]
+        # precision, recall, thresholds = precision_recall_curve(flatten_gt_mask_list, flatten_score_map_list)
+        # a = 2 * precision * recall
+        # b = precision + recall
+        # f1 = np.divide(a, b, out=np.zeros_like(a), where=b != 0)
+        # threshold = thresholds[np.argmax(f1)]
 
         # visualize localization result
-        visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, exp_path, class_name, cut_surrounding)
+        #visualize_loc_result(test_imgs, gt_mask_list, score_map_list, threshold, exp_path, class_name, cut_surrounding)
 
         fig.tight_layout()
         fig.savefig(os.path.join(exp_path, 'roc_curve.png'), dpi=100)
