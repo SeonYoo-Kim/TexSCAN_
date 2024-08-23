@@ -122,6 +122,13 @@ def main():
         print('%s ROCAUC: %.3f' % (class_name, roc_auc))
         fig_img_rocauc.plot(fpr, tpr, label='%s ROCAUC: %.3f' % (class_name, roc_auc))
 
+        exp_path = os.path.join(args.save_path, args.dataset, 'e=' + str(args.e))
+        os.makedirs(exp_path, exist_ok=True)
+
+        img_fpr_txt = open(os.path.join(exp_path, 'img_fpr.txt'), 'a')
+        img_fpr_txt.write(f"{fpr}\n")
+        img_fpr_txt.close()
+
         # calculate per-pixel level ROCAUC
         flatten_gt_mask_list = np.concatenate(gt_mask_list).ravel()
         flatten_score_map_list = np.concatenate(score_map_list).ravel()
@@ -132,8 +139,9 @@ def main():
         print('%s pixel ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
         fig_pixel_rocauc.plot(fpr, tpr, label='%s ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
 
-        exp_path = os.path.join(args.save_path, args.dataset, 'e=' + str(args.e))
-        os.makedirs(exp_path, exist_ok=True)
+        pxl_fpr_txt = open(os.path.join(exp_path, 'pxl_fpr.txt'), 'a')
+        pxl_fpr_txt.write(f"{fpr}\n")
+        pxl_fpr_txt.close()
 
         img_log_txt = open(os.path.join(exp_path, 'img_auroc.txt'), 'a')
         img_log_txt.write(f"{roc_auc}\n")
