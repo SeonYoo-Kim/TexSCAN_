@@ -116,7 +116,7 @@ def main():
         ##################################################
         # calculate image-level ROC AUC score
         # 클래스 단위
-        fpr, tpr, _ = roc_curve(lable_list, scores) # return FPRs, TPRs, Thresholds
+        fpr, tpr, thresholds = roc_curve(lable_list, scores) # return FPRs, TPRs, Thresholds
         roc_auc = roc_auc_score(lable_list, scores) # return roc_score
         total_roc_auc.append(roc_auc)
         print('%s ROCAUC: %.3f' % (class_name, roc_auc))
@@ -125,8 +125,12 @@ def main():
         exp_path = os.path.join(args.save_path, args.dataset, 'e=' + str(args.e))
         os.makedirs(exp_path, exist_ok=True)
 
+        j_scores = tpr - fpr
+        optimal_idx = np.argmax(j_scores)
+        optimal_fpr = fpr[optimal_idx]
+
         img_fpr_txt = open(os.path.join(exp_path, 'img_fpr.txt'), 'a')
-        img_fpr_txt.write(f"{fpr}\n")
+        img_fpr_txt.write(f"{optimal_fpr}\n")
         img_fpr_txt.close()
 
         # calculate per-pixel level ROCAUC
@@ -138,10 +142,6 @@ def main():
         total_pixel_roc_auc.append(per_pixel_rocauc)
         print('%s pixel ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
         fig_pixel_rocauc.plot(fpr, tpr, label='%s ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
-
-        pxl_fpr_txt = open(os.path.join(exp_path, 'pxl_fpr.txt'), 'a')
-        pxl_fpr_txt.write(f"{fpr}\n")
-        pxl_fpr_txt.close()
 
         img_log_txt = open(os.path.join(exp_path, 'img_auroc.txt'), 'a')
         img_log_txt.write(f"{roc_auc}\n")
