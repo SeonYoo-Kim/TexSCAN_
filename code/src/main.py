@@ -205,14 +205,14 @@ def get_feature(model, img, device, outputs):
 def calc_dbscan(gallery, layerID, e, m, label_amount):
     # gallery = (i, 1, 1600, c)
     heatmap = np.zeros((gallery.shape[0], gallery.shape[2]))  # (i, 1600)
-    scaler = StandardScaler()
+    # scaler = StandardScaler()
     dbscan = DBSCAN(eps=e, min_samples=m)  # eps와 min_samples는 데이터에 맞게 조정하세요.
     for img_idx in range(gallery.shape[0]):
         # 각 이미지의 갤러리에서 특정 레이어ID의 데이터를 선택합니다.
         features = gallery[img_idx, layerID, :, :]  # (1600, c)
-        data_scaled = scaler.fit_transform(features)
+        # data_scaled = scaler.fit_transform(features)
 
-        labels = dbscan.fit_predict(data_scaled)  # (1600,)
+        labels = dbscan.fit_predict(features)  # (1600,)
         # print(labels)
         # 라벨을 빈도수에 따라 정렬합니다.
         ranked_cluster = rank_labels(labels)
